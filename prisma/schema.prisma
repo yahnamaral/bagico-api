@@ -1,0 +1,728 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum PersonaMode {
+  AGENCY
+  BUSINESS
+}
+
+enum PlanType {
+  START
+  PRO
+  AGENCY
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  EXPIRED
+}
+
+enum OrganizationRole {
+  SUPER_ADMIN
+  AGENCY_OWNER
+  AGENCY_MANAGER
+  AGENCY_MAKER
+  FREELANCER
+  CLIENT_ADMIN
+  CLIENT_MANAGER
+  CLIENT_STAFF
+}
+
+enum OrganizationMemberStatus {
+  ACTIVE
+  REMOVED
+  PENDING
+}
+
+enum OrganizationInviteStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}
+
+enum NotificationType {
+  TASK_ASSIGNED
+  TASK_COMMENT_CREATED
+  TASK_FILE_UPLOADED
+  TASK_APPROVAL_REQUESTED
+  TASK_APPROVED
+  TASK_CHANGES_REQUESTED
+  PORTAL_COMMENT_CREATED
+  MEMBER_INVITED
+  CLIENT_PORTAL_INVITED
+  SYSTEM
+}
+
+enum NotificationEntityType {
+  TASK
+  PROJECT
+  CLIENT
+  BOARD
+  COMMENT
+  FILE
+  INVITE
+  ORGANIZATION
+}
+
+enum ClientStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum ProjectStatus {
+  ACTIVE
+  PAUSED
+  FINISHED
+  ARCHIVED
+}
+
+enum ProjectPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TaskStatus {
+  OPEN
+  IN_PROGRESS
+  IN_REVIEW
+  APPROVED
+  SCHEDULED
+  DONE
+  ARCHIVED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TaskApprovalStatus {
+  NOT_REQUESTED
+  PENDING
+  APPROVED
+  CHANGES_REQUESTED
+}
+
+enum TaskCommentType {
+  COMMENT
+  SYSTEM
+  APPROVAL
+  CHANGE_REQUEST
+}
+
+enum TaskFileCategory {
+  ATTACHMENT
+  CREATIVE
+  BRIEFING
+  CONTRACT
+  REFERENCE
+  FINAL
+}
+
+enum ClientPortalRole {
+  CLIENT_ADMIN
+  CLIENT_MANAGER
+  CLIENT_STAFF
+}
+
+enum ClientPortalInviteStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}
+
+enum AiGenerationType {
+  COPY_GENERATION
+  CONTENT_IDEAS
+  BRIEFING_IMPROVEMENT
+  CHANNEL_RECOMMENDATION
+  TASK_SUMMARY
+}
+
+enum TimeEntrySource {
+  TIMER
+  MANUAL
+}
+
+enum TimeEntryStatus {
+  RUNNING
+  STOPPED
+  DELETED
+}
+
+enum RevenueContractType {
+  RECURRING
+  PROJECT_FIXED
+  HOURLY
+  ONE_TIME
+}
+
+enum BillingCycle {
+  MONTHLY
+  QUARTERLY
+  YEARLY
+}
+
+enum RevenueContractStatus {
+  ACTIVE
+  PAUSED
+  FINISHED
+  CANCELED
+}
+
+model Organization {
+  id          String      @id @default(uuid()) @db.Uuid
+  clerkOrgId  String      @unique
+  name        String
+  slug        String      @unique
+  personaMode PersonaMode
+  plan        PlanType    @default(START)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  members             OrganizationMember[]
+  organizationInvites OrganizationInvite[]
+  clients      Client[]
+  projects     Project[]
+  boards       Board[]
+  boardColumns BoardColumn[]
+  tasks        Task[]
+  taskComments TaskComment[]
+  taskFiles    TaskFile[]
+  taskActivities TaskActivity[]
+  clientMembers       ClientMember[]
+  clientPortalInvites ClientPortalInvite[]
+  subscriptions       OrganizationSubscription[]
+  aiGenerations       AiGeneration[]
+  timeEntries         TimeEntry[]
+  memberCostRates     MemberCostRate[]
+  revenueContracts    RevenueContract[]
+  notifications       Notification[]
+
+  @@index([clerkOrgId])
+  @@map("organizations")
+}
+
+model MemberCostRate {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @db.Uuid
+  clerkUserId    String
+  hourlyCost     Decimal   @db.Decimal(12, 2)
+  currency       String    @default("BRL")
+  startsAt       DateTime
+  endsAt         DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([clerkUserId])
+  @@index([startsAt])
+  @@index([endsAt])
+  @@index([deletedAt])
+  @@index([organizationId, clerkUserId])
+  @@map("member_cost_rates")
+}
+
+model RevenueContract {
+  id             String                @id @default(uuid()) @db.Uuid
+  organizationId String                @db.Uuid
+  clientId       String                @db.Uuid
+  projectId      String?               @db.Uuid
+  name           String
+  type           RevenueContractType
+  amount         Decimal               @db.Decimal(12, 2)
+  currency       String                @default("BRL")
+  billingCycle   BillingCycle?
+  startsAt       DateTime
+  endsAt         DateTime?
+  status         RevenueContractStatus @default(ACTIVE)
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  deletedAt      DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client       Client       @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  project      Project?     @relation(fields: [projectId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId])
+  @@index([clientId])
+  @@index([projectId])
+  @@index([type])
+  @@index([status])
+  @@index([startsAt])
+  @@index([endsAt])
+  @@index([deletedAt])
+  @@index([organizationId, clientId])
+  @@index([organizationId, projectId])
+  @@map("revenue_contracts")
+}
+
+model AiGeneration {
+  id             String           @id @default(uuid()) @db.Uuid
+  organizationId String           @db.Uuid
+  clerkUserId    String
+  type           AiGenerationType
+  input          Json
+  output         Json
+  prompt         String?
+  model          String?
+  tokensUsed     Int?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([clerkUserId])
+  @@index([type])
+  @@index([createdAt])
+  @@map("ai_generations")
+}
+
+model OrganizationSubscription {
+  id                 String             @id @default(uuid()) @db.Uuid
+  organizationId     String             @db.Uuid
+  plan               PlanType
+  status             SubscriptionStatus @default(ACTIVE)
+  startedAt          DateTime           @default(now())
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  canceledAt         DateTime?
+  trialEndsAt        DateTime?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([plan])
+  @@index([status])
+  @@index([currentPeriodEnd])
+  @@map("organization_subscriptions")
+}
+
+model Client {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  name           String
+  document       String?
+  email          String?
+  phone          String?
+  website        String?
+  segment        String?
+  notes          String?
+  status         ClientStatus @default(ACTIVE)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projects       Project[]
+  tasks          Task[]
+  portalMembers       ClientMember[]
+  portalInvites       ClientPortalInvite[]
+  timeEntries         TimeEntry[]
+  revenueContracts    RevenueContract[]
+
+  @@index([organizationId])
+  @@index([name])
+  @@index([status])
+  @@index([deletedAt])
+  @@index([organizationId, name])
+  @@map("clients")
+}
+
+model ClientPortalInvite {
+  id                    String                   @id @default(uuid()) @db.Uuid
+  organizationId        String                   @db.Uuid
+  clientId              String                   @db.Uuid
+  email                 String
+  role                  ClientPortalRole
+  tokenHash             String                   @unique
+  invitedByClerkUserId  String
+  acceptedByClerkUserId String?
+  status                ClientPortalInviteStatus @default(PENDING)
+  expiresAt             DateTime
+  acceptedAt            DateTime?
+  revokedAt             DateTime?
+  createdAt             DateTime                 @default(now())
+  updatedAt             DateTime                 @updatedAt
+  deletedAt             DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client       Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([clientId])
+  @@index([email])
+  @@index([status])
+  @@index([expiresAt])
+  @@index([deletedAt])
+  @@map("client_portal_invites")
+}
+
+model ClientMember {
+  id             String           @id @default(uuid()) @db.Uuid
+  organizationId String           @db.Uuid
+  clientId       String           @db.Uuid
+  clerkUserId    String
+  role           ClientPortalRole
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  deletedAt      DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client       Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, clientId, clerkUserId])
+  @@index([organizationId])
+  @@index([clientId])
+  @@index([clerkUserId])
+  @@index([role])
+  @@index([deletedAt])
+  @@map("client_members")
+}
+
+model Project {
+  id             String          @id @default(uuid()) @db.Uuid
+  organizationId String          @db.Uuid
+  clientId       String          @db.Uuid
+  name           String
+  description    String?
+  status         ProjectStatus   @default(ACTIVE)
+  priority       ProjectPriority @default(MEDIUM)
+  startDate      DateTime?
+  dueDate        DateTime?
+  budget         Decimal?        @db.Decimal(12, 2)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  deletedAt      DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client       Client       @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  boards      Board[]
+  tasks       Task[]
+  timeEntries       TimeEntry[]
+  revenueContracts  RevenueContract[]
+
+  @@index([organizationId])
+  @@index([clientId])
+  @@index([status])
+  @@index([priority])
+  @@index([deletedAt])
+  @@index([organizationId, clientId])
+  @@index([organizationId, status])
+  @@index([organizationId, name])
+  @@map("projects")
+}
+
+model Board {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @db.Uuid
+  projectId      String    @db.Uuid
+  name           String
+  description    String?
+  isDefault      Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  project      Project       @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  columns      BoardColumn[]
+  tasks        Task[]
+
+  @@index([organizationId])
+  @@index([projectId])
+  @@index([deletedAt])
+  @@index([organizationId, projectId])
+  @@map("boards")
+}
+
+model BoardColumn {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @db.Uuid
+  boardId        String    @db.Uuid
+  name           String
+  position       Int
+  color          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  board        Board        @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  tasks        Task[]
+
+  @@index([organizationId])
+  @@index([boardId])
+  @@index([position])
+  @@index([deletedAt])
+  @@index([organizationId, boardId])
+  @@map("board_columns")
+}
+
+model Task {
+  id                     String       @id @default(uuid()) @db.Uuid
+  organizationId         String       @db.Uuid
+  boardId                String       @db.Uuid
+  columnId               String       @db.Uuid
+  projectId              String       @db.Uuid
+  clientId               String       @db.Uuid
+  title                  String
+  description            String?
+  status                 TaskStatus   @default(OPEN)
+  priority               TaskPriority @default(MEDIUM)
+  mediaType              String?
+  dueDate                DateTime?
+  position                      Int
+  isRework                      Boolean            @default(false)
+  approvalStatus                TaskApprovalStatus @default(NOT_REQUESTED)
+  approvalRequestedAt           DateTime?
+  approvedAt                    DateTime?
+  changeRequestedAt             DateTime?
+  approvalRequestedByClerkUserId String?
+  approvedByClerkUserId         String?
+  changeRequestedByClerkUserId  String?
+  createdByClerkUserId          String
+  assignedToClerkUserId         String?
+  estimatedMinutes              Int?
+  createdAt                     DateTime           @default(now())
+  updatedAt                     DateTime           @updatedAt
+  deletedAt                     DateTime?
+
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  board        Board          @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  column       BoardColumn    @relation(fields: [columnId], references: [id], onDelete: Restrict)
+  project      Project        @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  client       Client         @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  comments     TaskComment[]
+  files        TaskFile[]
+  activities   TaskActivity[]
+  timeEntries  TimeEntry[]
+
+  @@index([organizationId])
+  @@index([boardId])
+  @@index([columnId])
+  @@index([projectId])
+  @@index([clientId])
+  @@index([assignedToClerkUserId])
+  @@index([status])
+  @@index([priority])
+  @@index([dueDate])
+  @@index([position])
+  @@index([deletedAt])
+  @@index([organizationId, boardId])
+  @@index([organizationId, columnId])
+  @@index([organizationId, projectId])
+  @@map("tasks")
+}
+
+model TaskComment {
+  id             String          @id @default(uuid()) @db.Uuid
+  organizationId String          @db.Uuid
+  taskId         String          @db.Uuid
+  clerkUserId    String
+  content        String
+  type           TaskCommentType @default(COMMENT)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  deletedAt      DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  task         Task         @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([taskId])
+  @@index([clerkUserId])
+  @@index([deletedAt])
+  @@index([organizationId, taskId])
+  @@map("task_comments")
+}
+
+model TaskFile {
+  id                    String           @id @default(uuid()) @db.Uuid
+  organizationId        String           @db.Uuid
+  taskId                String           @db.Uuid
+  uploadedByClerkUserId String
+  fileName              String
+  fileUrl               String
+  fileKey               String?
+  mimeType              String
+  size                  Int
+  version               Int              @default(1)
+  category              TaskFileCategory @default(ATTACHMENT)
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  deletedAt             DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  task         Task         @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([taskId])
+  @@index([uploadedByClerkUserId])
+  @@index([category])
+  @@index([deletedAt])
+  @@index([organizationId, taskId])
+  @@map("task_files")
+}
+
+model TaskActivity {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  taskId         String   @db.Uuid
+  clerkUserId    String?
+  type           String
+  message        String
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  task         Task         @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([taskId])
+  @@index([type])
+  @@index([createdAt])
+  @@map("task_activities")
+}
+
+model TimeEntry {
+  id              String           @id @default(uuid()) @db.Uuid
+  organizationId  String           @db.Uuid
+  taskId          String           @db.Uuid
+  projectId       String           @db.Uuid
+  clientId        String           @db.Uuid
+  clerkUserId     String
+  description     String?
+  startedAt       DateTime
+  endedAt         DateTime?
+  durationMinutes Int?
+  source          TimeEntrySource  @default(TIMER)
+  status          TimeEntryStatus  @default(RUNNING)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  deletedAt       DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  task         Task         @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  project      Project      @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  client       Client       @relation(fields: [clientId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId])
+  @@index([taskId])
+  @@index([projectId])
+  @@index([clientId])
+  @@index([clerkUserId])
+  @@index([status])
+  @@index([startedAt])
+  @@index([endedAt])
+  @@index([deletedAt])
+  @@index([organizationId, taskId])
+  @@index([organizationId, projectId])
+  @@index([organizationId, clerkUserId])
+  @@map("time_entries")
+}
+
+model OrganizationMember {
+  id             String                   @id @default(uuid()) @db.Uuid
+  organizationId String                   @db.Uuid
+  clerkUserId    String
+  invitedEmail   String?
+  role           OrganizationRole
+  status         OrganizationMemberStatus @default(ACTIVE)
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
+  deletedAt      DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, clerkUserId])
+  @@index([organizationId])
+  @@index([clerkUserId])
+  @@index([role])
+  @@index([status])
+  @@index([deletedAt])
+  @@map("organization_members")
+}
+
+model OrganizationInvite {
+  id                    String                   @id @default(uuid()) @db.Uuid
+  organizationId        String                   @db.Uuid
+  email                 String
+  role                  OrganizationRole
+  tokenHash             String                   @unique
+  invitedByClerkUserId  String
+  acceptedByClerkUserId String?
+  status                OrganizationInviteStatus @default(PENDING)
+  expiresAt             DateTime
+  acceptedAt            DateTime?
+  revokedAt             DateTime?
+  createdAt             DateTime                 @default(now())
+  updatedAt             DateTime                 @updatedAt
+  deletedAt             DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([email])
+  @@index([role])
+  @@index([status])
+  @@index([expiresAt])
+  @@index([tokenHash])
+  @@index([deletedAt])
+  @@map("organization_invites")
+}
+
+model Notification {
+  id                   String                  @id @default(uuid()) @db.Uuid
+  organizationId       String                  @db.Uuid
+  recipientClerkUserId String
+  actorClerkUserId     String?
+  type                 NotificationType
+  title                String
+  message              String
+  href                 String?
+  entityType           NotificationEntityType?
+  entityId             String?
+  metadata             Json?
+  readAt               DateTime?
+  createdAt            DateTime                @default(now())
+  updatedAt            DateTime                @updatedAt
+  deletedAt            DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([recipientClerkUserId])
+  @@index([actorClerkUserId])
+  @@index([type])
+  @@index([entityType])
+  @@index([entityId])
+  @@index([readAt])
+  @@index([createdAt])
+  @@index([deletedAt])
+  @@index([organizationId, recipientClerkUserId])
+  @@index([organizationId, recipientClerkUserId, readAt])
+  @@map("notifications")
+}
