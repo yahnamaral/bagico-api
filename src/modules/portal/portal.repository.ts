@@ -1,4 +1,4 @@
-import type { Prisma } from "../../../generated/prisma/client";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "../../infrastructure/database/prisma";
 import type { PortalAccess } from "./portal-access";
 import type { ListPortalTasksQuery } from "./portal.schemas";

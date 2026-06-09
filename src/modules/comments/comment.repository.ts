@@ -1,4 +1,4 @@
-import type { TaskComment, TaskCommentType } from "../../../generated/prisma/client";
+import type { TaskComment, TaskCommentType } from "@prisma/client";
 import { prisma } from "../../infrastructure/database/prisma";
 import type { CreateCommentBody, UpdateCommentBody } from "./comment.schemas";
 

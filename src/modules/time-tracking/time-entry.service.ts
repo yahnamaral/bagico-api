@@ -1,4 +1,4 @@
-import type { OrganizationRole } from "../../../generated/prisma/client";
+import type { OrganizationRole } from "@prisma/client";
 import { AppError } from "../../shared/errors/AppError";
 import { getRolePermissions } from "../../shared/permissions/permissions";
 import { TASK_ACTIVITY_TYPES } from "../tasks/task-activity.constants";

@@ -1,4 +1,4 @@
-import type { Organization, OrganizationMember } from "../../../generated/prisma/client";
+import type { Organization, OrganizationMember } from "@prisma/client";
 import { getBillingPlan } from "../../shared/billing/plans";
 import { planHasFeature } from "../../shared/billing/features";
 import { AppError } from "../../shared/errors/AppError";

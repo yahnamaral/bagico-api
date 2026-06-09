@@ -1,5 +1,5 @@
-import type { Organization, OrganizationMember, PersonaMode } from "../../../generated/prisma/client";
-import { OrganizationRole } from "../../../generated/prisma/client";
+import type { Organization, OrganizationMember, PersonaMode } from "@prisma/client";
+import { OrganizationRole } from "@prisma/client";
 import { prisma } from "../../infrastructure/database/prisma";
 
 export type CreateOrganizationInput = {

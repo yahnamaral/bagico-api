@@ -1,4 +1,4 @@
-import type { Client, ClientStatus, Prisma } from "../../../generated/prisma/client";
+import type { Client, ClientStatus, Prisma } from "@prisma/client";
 import { prisma } from "../../infrastructure/database/prisma";
 import type { CreateClientBody, ListClientsQuery, UpdateClientBody } from "./client.schemas";
 

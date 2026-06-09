@@ -1,4 +1,4 @@
-import type { Organization, OrganizationMember } from "../../../generated/prisma/client";
+import type { Organization, OrganizationMember } from "@prisma/client";
 import "fastify";
 
 declare module "fastify" {

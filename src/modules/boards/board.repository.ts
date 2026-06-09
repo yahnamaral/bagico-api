@@ -1,4 +1,4 @@
-import type { Board, BoardColumn, Prisma } from "../../../generated/prisma/client";
+import type { Board, BoardColumn, Prisma } from "@prisma/client";
 import { prisma } from "../../infrastructure/database/prisma";
 import { DEFAULT_BOARD_COLUMNS } from "./board.constants";
 import type {

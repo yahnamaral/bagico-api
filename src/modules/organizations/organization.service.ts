@@ -1,4 +1,4 @@
-import type { Organization, OrganizationMember } from "../../../generated/prisma/client";
+import type { Organization, OrganizationMember } from "@prisma/client";
 import { AppError } from "../../shared/errors/AppError";
 import type { OrganizationRepository } from "./organization.repository";
 import type { SyncOrganizationBody } from "./organization.schemas";

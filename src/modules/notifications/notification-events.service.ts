@@ -3,7 +3,7 @@ import {
   NotificationType,
   OrganizationRole,
   type ClientPortalRole,
-} from "../../../generated/prisma/client";
+} from "@prisma/client";
 import type { CreateNotificationData } from "./notification.repository";
 import type { NotificationEmailService } from "./notification-email.service";
 import {

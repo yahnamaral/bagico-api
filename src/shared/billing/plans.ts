@@ -1,4 +1,4 @@
-import { PlanType } from "../../../generated/prisma/client";
+import { PlanType } from "@prisma/client";
 
 export type PlanLimits = {
   maxUsers: number | null;

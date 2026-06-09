@@ -3,7 +3,7 @@ import type {
   NotificationType,
   OrganizationRole,
   Prisma,
-} from "../../../generated/prisma/client";
+} from "@prisma/client";
 import { prisma } from "../../infrastructure/database/prisma";
 
 const notificationPublicSelect = {

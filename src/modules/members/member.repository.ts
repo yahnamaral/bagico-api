@@ -2,7 +2,7 @@ import type {
   OrganizationMemberStatus,
   OrganizationRole,
   Prisma,
-} from "../../../generated/prisma/client";
+} from "@prisma/client";
 import { prisma } from "../../infrastructure/database/prisma";
 
 const memberPublicSelect = {

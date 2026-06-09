@@ -1,4 +1,4 @@
-import { OrganizationRole, PlanType } from "../../../generated/prisma/client";
+import { OrganizationRole, PlanType } from "@prisma/client";
 import {
   getBillingPlan,
   getPublicPlanCatalog,

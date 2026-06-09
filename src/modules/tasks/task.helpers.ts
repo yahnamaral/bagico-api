@@ -1,4 +1,4 @@
-import { TaskStatus } from "../../../generated/prisma/client";
+import { TaskStatus } from "@prisma/client";
 
 export function normalizeColumnName(name: string): string {
   return name

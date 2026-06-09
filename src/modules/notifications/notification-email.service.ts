@@ -1,7 +1,7 @@
 import type {
   ClientPortalRole,
   OrganizationRole,
-} from "../../../generated/prisma/client";
+} from "@prisma/client";
 import { clerkClient } from "../../infrastructure/auth/clerkAuth";
 import type { MailService } from "../../infrastructure/mail/mail.service";
 import { buildAppUrl } from "./notification.helpers";

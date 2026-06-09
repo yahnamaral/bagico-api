@@ -1,4 +1,4 @@
-import type { Board, BoardColumn, OrganizationRole } from "../../../generated/prisma/client";
+import type { Board, BoardColumn, OrganizationRole } from "@prisma/client";
 import { AppError } from "../../shared/errors/AppError";
 import { ProjectRepository } from "../projects/project.repository";
 import type { TimeEntryService } from "../time-tracking/time-entry.service";

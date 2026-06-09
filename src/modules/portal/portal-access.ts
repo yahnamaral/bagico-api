@@ -1,4 +1,4 @@
-import { OrganizationRole } from "../../../generated/prisma/client";
+import { OrganizationRole } from "@prisma/client";
 import { prisma } from "../../infrastructure/database/prisma";
 
 const INTERNAL_PORTAL_ROLES = new Set<OrganizationRole>([

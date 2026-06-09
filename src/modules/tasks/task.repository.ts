@@ -1,4 +1,4 @@
-import type { Prisma, Task, TaskPriority, TaskStatus } from "../../../generated/prisma/client";
+import type { Prisma, Task, TaskPriority, TaskStatus } from "@prisma/client";
 import { prisma } from "../../infrastructure/database/prisma";
 import { statusFromColumnName } from "./task.helpers";
 import type {

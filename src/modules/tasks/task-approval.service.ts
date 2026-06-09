@@ -2,7 +2,7 @@ import {
   TaskApprovalStatus,
   TaskCommentType,
   TaskStatus,
-} from "../../../generated/prisma/client";
+} from "@prisma/client";
 import { AppError } from "../../shared/errors/AppError";
 import { fireNotification } from "../notifications/notification.helpers";
 import { notificationEvents } from "../notifications/notification-events.instance";

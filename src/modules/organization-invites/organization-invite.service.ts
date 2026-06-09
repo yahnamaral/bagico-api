@@ -1,4 +1,4 @@
-import { OrganizationRole } from "../../../generated/prisma/client";
+import { OrganizationRole } from "@prisma/client";
 import { clerkClient } from "../../infrastructure/auth/clerkAuth";
 import { ensureClerkOrganizationMembership } from "../../infrastructure/auth/clerk-organization.service";
 import { MailService } from "../../infrastructure/mail/mail.service";

@@ -6,8 +6,8 @@ dist
 .env.*
 !.env.example
 
-# Prisma generated client (regenerate with npm run db:generate)
-/generated/prisma
+# Prisma client is generated into node_modules/.prisma/client on build
+/generated
 
 # Logs / OS
 *.log

@@ -1,4 +1,4 @@
-import { OrganizationRole } from "../../../generated/prisma/client";
+import { OrganizationRole } from "@prisma/client";
 import { clerkClient } from "../../infrastructure/auth/clerkAuth";
 import { AppError } from "../../shared/errors/AppError";
 import type { MemberRepository } from "./member.repository";

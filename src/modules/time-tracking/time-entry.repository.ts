@@ -2,7 +2,7 @@ import type {
   Prisma,
   TimeEntrySource,
   TimeEntryStatus,
-} from "../../../generated/prisma/client";
+} from "@prisma/client";
 import { prisma } from "../../infrastructure/database/prisma";
 import type {
   ListTaskTimeQuery,

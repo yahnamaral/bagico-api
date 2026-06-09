@@ -1,4 +1,4 @@
-import type { TaskFile, TaskFileCategory } from "../../../generated/prisma/client";
+import type { TaskFile, TaskFileCategory } from "@prisma/client";
 import { prisma } from "../../infrastructure/database/prisma";
 import type { CreateFileBody } from "./file.schemas";
 

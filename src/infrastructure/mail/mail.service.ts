@@ -1,7 +1,7 @@
 import type {
   ClientPortalRole,
   OrganizationRole,
-} from "../../../generated/prisma/client";
+} from "@prisma/client";
 import { AppError } from "../../shared/errors/AppError";
 import { getResendClient, isProductionEnv } from "./resend-client";
 

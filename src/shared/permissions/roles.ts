@@ -1,4 +1,4 @@
-import { OrganizationRole } from "../../../generated/prisma/client";
+import { OrganizationRole } from "@prisma/client";
 
 export { OrganizationRole };
 

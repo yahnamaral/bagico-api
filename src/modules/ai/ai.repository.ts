@@ -1,7 +1,7 @@
 import type {
   AiGenerationType,
   Prisma,
-} from "../../../generated/prisma/client";
+} from "@prisma/client";
 import { prisma } from "../../infrastructure/database/prisma";
 import type { ListAiHistoryQuery } from "./ai.schemas";
 

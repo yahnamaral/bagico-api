@@ -1,4 +1,4 @@
-import { PlanType } from "../../../generated/prisma/client";
+import { PlanType } from "@prisma/client";
 import { BILLING_PLANS } from "./plans";
 
 export const FEATURES = [

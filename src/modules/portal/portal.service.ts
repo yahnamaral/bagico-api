@@ -4,13 +4,13 @@ import {
   TaskApprovalStatus,
   TaskCommentType,
   TaskStatus,
-} from "../../../generated/prisma/client";
+} from "@prisma/client";
 import { AppError } from "../../shared/errors/AppError";
 import { fireNotification } from "../notifications/notification.helpers";
 import { notificationEvents } from "../notifications/notification-events.instance";
 import { getPlanFeatures } from "../../shared/permissions/features";
 import { getRolePermissions } from "../../shared/permissions/permissions";
-import type { Organization, OrganizationMember } from "../../../generated/prisma/client";
+import type { Organization, OrganizationMember } from "@prisma/client";
 import { OrganizationRepository } from "../organizations/organization.repository";
 import { TASK_ACTIVITY_TYPES } from "../tasks/task-activity.constants";
 import type { TaskActivityService } from "../tasks/task-activity.service";

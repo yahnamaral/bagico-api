@@ -1,4 +1,4 @@
-import type { Prisma, ProjectPriority, ProjectStatus } from "../../../generated/prisma/client";
+import type { Prisma, ProjectPriority, ProjectStatus } from "@prisma/client";
 import { prisma } from "../../infrastructure/database/prisma";
 import type {
   CreateProjectBody,

@@ -1,4 +1,4 @@
-import type { Client } from "../../../generated/prisma/client";
+import type { Client } from "@prisma/client";
 import { AppError } from "../../shared/errors/AppError";
 import type { ClientRepository } from "./client.repository";
 import type {

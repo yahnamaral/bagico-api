@@ -1,4 +1,4 @@
-import type { OrganizationRole, Prisma } from "../../../generated/prisma/client";
+import type { OrganizationRole, Prisma } from "@prisma/client";
 import { prisma } from "../../infrastructure/database/prisma";
 
 const invitePublicSelect = {

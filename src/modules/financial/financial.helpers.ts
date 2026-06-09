@@ -3,7 +3,7 @@ import type {
   RevenueContractStatus,
   RevenueContractType,
   TimeEntry,
-} from "../../../generated/prisma/client";
+} from "@prisma/client";
 
 type DecimalLike = { toNumber(): number } | number | string;
 

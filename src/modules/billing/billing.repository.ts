@@ -1,4 +1,4 @@
-import type { PlanType } from "../../../generated/prisma/client";
+import type { PlanType } from "@prisma/client";
 import { prisma } from "../../infrastructure/database/prisma";
 
 const ACTIVE_SUBSCRIPTION_STATUSES = ["ACTIVE", "TRIALING"] as const;

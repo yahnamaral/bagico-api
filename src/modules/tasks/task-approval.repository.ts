@@ -1,4 +1,4 @@
-import type { Prisma, TaskCommentType } from "../../../generated/prisma/client";
+import type { Prisma, TaskCommentType } from "@prisma/client";
 import { prisma } from "../../infrastructure/database/prisma";
 
 const commentSelect = {

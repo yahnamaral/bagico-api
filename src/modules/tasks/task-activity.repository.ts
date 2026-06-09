@@ -1,4 +1,4 @@
-import type { Prisma, TaskActivity } from "../../../generated/prisma/client";
+import type { Prisma, TaskActivity } from "@prisma/client";
 import { prisma } from "../../infrastructure/database/prisma";
 import type { TaskActivityType } from "./task-activity.constants";
 

@@ -1,7 +1,7 @@
 import {
   AiGenerationType,
   type Prisma,
-} from "../../../generated/prisma/client";
+} from "@prisma/client";
 import {
   generateAiJsonResponse,
   parseAiJsonResponse,
