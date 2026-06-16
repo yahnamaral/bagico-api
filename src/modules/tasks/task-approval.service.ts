@@ -1,5 +1,7 @@
 import {
+  OrganizationRole,
   TaskApprovalStatus,
+  TaskApproverKind,
   TaskCommentType,
   TaskStatus,
 } from "@prisma/client";
@@ -19,6 +21,11 @@ import type {
   RequestApprovalBody,
   RequestChangesBody,
 } from "./task.schemas";
+
+const OWNER_ROLES: readonly OrganizationRole[] = [
+  OrganizationRole.AGENCY_OWNER,
+  OrganizationRole.SUPER_ADMIN,
+];
 
 export class TaskApprovalService {
   constructor(
@@ -59,6 +66,66 @@ export class TaskApprovalService {
     return task;
   }
 
+  private async resolveResponsibleApprover(
+    organizationId: string,
+    task: TaskDetailWithCounts,
+    body: RequestApprovalBody,
+  ): Promise<{
+    responsibleApproverClerkUserId: string | null;
+    responsibleApproverKind: TaskApproverKind | null;
+  }> {
+    if (!body.approverClerkUserId) {
+      return {
+        responsibleApproverClerkUserId: null,
+        responsibleApproverKind: null,
+      };
+    }
+
+    const kind = body.approverKind as TaskApproverKind | undefined;
+
+    if (!kind) {
+      throw new AppError(
+        "approverKind is required when approverClerkUserId is provided",
+        400,
+        "APPROVER_KIND_REQUIRED",
+      );
+    }
+
+    if (kind === TaskApproverKind.INTERNAL) {
+      const member = await this.approvalRepository.findActiveOrganizationMember(
+        organizationId,
+        body.approverClerkUserId,
+      );
+
+      if (!member) {
+        throw new AppError(
+          "Approver is not an active member of the organization",
+          422,
+          "APPROVER_NOT_ORGANIZATION_MEMBER",
+        );
+      }
+    } else {
+      const clientMember = await this.approvalRepository.findActiveClientMember(
+        organizationId,
+        task.clientId,
+        body.approverClerkUserId,
+      );
+
+      if (!clientMember) {
+        throw new AppError(
+          "Approver is not a portal member of the task's client",
+          422,
+          "APPROVER_NOT_CLIENT_MEMBER",
+        );
+      }
+    }
+
+    return {
+      responsibleApproverClerkUserId: body.approverClerkUserId,
+      responsibleApproverKind: kind,
+    };
+  }
+
   async requestApproval(
     organizationId: string,
     taskId: string,
@@ -67,6 +134,12 @@ export class TaskApprovalService {
   ): Promise<TaskDetailWithCounts> {
     const task = await this.getTaskOrThrow(organizationId, taskId);
     const now = new Date();
+
+    const responsibleApprover = await this.resolveResponsibleApprover(
+      organizationId,
+      task,
+      body,
+    );
 
     await moveTaskToColumnByName({
       taskId,
@@ -82,6 +155,9 @@ export class TaskApprovalService {
         approvalStatus: TaskApprovalStatus.PENDING,
         approvalRequestedAt: now,
         approvalRequestedByClerkUserId: userId,
+        responsibleApproverClerkUserId:
+          responsibleApprover.responsibleApproverClerkUserId,
+        responsibleApproverKind: responsibleApprover.responsibleApproverKind,
         status: TaskStatus.IN_REVIEW,
       },
     );
@@ -111,11 +187,19 @@ export class TaskApprovalService {
       },
     );
 
+    const directRecipients =
+      responsibleApprover.responsibleApproverKind === TaskApproverKind.INTERNAL &&
+      responsibleApprover.responsibleApproverClerkUserId &&
+      responsibleApprover.responsibleApproverClerkUserId !== userId
+        ? [responsibleApprover.responsibleApproverClerkUserId]
+        : undefined;
+
     fireNotification(() =>
       notificationEvents.notifyApprovalRequested({
         organizationId,
         task,
         actorClerkUserId: userId,
+        ...(directRecipients ? { recipients: directRecipients } : {}),
       }),
     );
 
@@ -126,10 +210,29 @@ export class TaskApprovalService {
     organizationId: string,
     taskId: string,
     userId: string,
+    role: OrganizationRole,
     body: ApproveTaskBody,
   ): Promise<TaskDetailWithCounts> {
     const task = await this.getTaskOrThrow(organizationId, taskId);
     const now = new Date();
+
+    const isOwner = OWNER_ROLES.includes(role);
+
+    if (body.bypassApprovalRequest) {
+      if (!isOwner) {
+        throw new AppError(
+          "Only the owner can bypass the approval request",
+          403,
+          "APPROVAL_BYPASS_FORBIDDEN",
+        );
+      }
+    } else if (task.approvalStatus !== TaskApprovalStatus.PENDING) {
+      throw new AppError(
+        "Task is not pending approval",
+        409,
+        "TASK_NOT_PENDING_APPROVAL",
+      );
+    }
 
     const movedToAprovado = await tryMoveTaskToColumnByName({
       taskId,
@@ -180,7 +283,10 @@ export class TaskApprovalService {
       "Task approved",
       {
         clerkUserId: userId,
-        metadata: { comment: body.comment ?? null },
+        metadata: {
+          comment: body.comment ?? null,
+          bypassApprovalRequest: body.bypassApprovalRequest ?? false,
+        },
       },
     );
 
@@ -273,6 +379,8 @@ export class TaskApprovalService {
       approvalRequestedByClerkUserId: task.approvalRequestedByClerkUserId,
       approvedByClerkUserId: task.approvedByClerkUserId,
       changeRequestedByClerkUserId: task.changeRequestedByClerkUserId,
+      responsibleApproverClerkUserId: task.responsibleApproverClerkUserId,
+      responsibleApproverKind: task.responsibleApproverKind,
       comments,
       activities,
     };

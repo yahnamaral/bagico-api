@@ -105,6 +105,7 @@ export class TaskController {
       request.organization!.id,
       id,
       request.auth!.userId,
+      request.member!.role,
       body,
     );
   }
