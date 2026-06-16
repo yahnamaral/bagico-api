@@ -7,9 +7,10 @@
     "dev": "tsx watch src/main.ts",
     "generate": "prisma generate",
     "build": "prisma generate && tsup src/main.ts --format cjs --clean",
-    "start": "node dist/main.js",
+    "start": "prisma migrate deploy && node dist/main.js",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
