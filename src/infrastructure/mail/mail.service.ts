@@ -3,9 +3,32 @@ import type {
   OrganizationRole,
 } from "@prisma/client";
 import { AppError } from "../../shared/errors/AppError";
-import { getResendClient, isProductionEnv } from "./resend-client";
+import { getFromEmail, getResendClient, isProductionEnv } from "./resend-client";
 
-const FROM_EMAIL = "BagiCo Suite <onboarding@resend.dev>";
+type ResendError = {
+  message?: string;
+};
+
+function handleResendSendFailure(
+  error: ResendError,
+  failureMessage: string,
+  logContext: string,
+): SendInviteEmailResult {
+  const resendMessage = error.message ?? "Unknown email provider error";
+
+  if (isProductionEnv()) {
+    throw new AppError(failureMessage, 502, "EMAIL_SEND_FAILED", {
+      resendMessage,
+    });
+  }
+
+  console.warn(`[MailService] ${logContext}:`, resendMessage);
+
+  return {
+    sent: false,
+    warning: resendMessage,
+  };
+}
 
 export type SendClientPortalInviteEmailInput = {
   to: string;
@@ -177,17 +200,17 @@ export class MailService {
     }
 
     const { error } = await resend.emails.send({
-      from: FROM_EMAIL,
+      from: getFromEmail(),
       to: input.to,
       subject: `Convite para o portal — ${input.organizationName}`,
       html: buildInviteEmailHtml(input),
     });
 
     if (error) {
-      throw new AppError(
+      return handleResendSendFailure(
+        error,
         "Failed to send invite email",
-        502,
-        "EMAIL_SEND_FAILED",
+        "Client portal invite email was not sent",
       );
     }
 
@@ -220,17 +243,17 @@ export class MailService {
     }
 
     const { error } = await resend.emails.send({
-      from: FROM_EMAIL,
+      from: getFromEmail(),
       to: input.to,
       subject: `Convite para a equipe — ${input.organizationName}`,
       html: buildOrganizationInviteEmailHtml(input),
     });
 
     if (error) {
-      throw new AppError(
+      return handleResendSendFailure(
+        error,
         "Failed to send invite email",
-        502,
-        "EMAIL_SEND_FAILED",
+        "Organization invite email was not sent",
       );
     }
 
@@ -267,17 +290,17 @@ export class MailService {
     }
 
     const { error } = await resend.emails.send({
-      from: FROM_EMAIL,
+      from: getFromEmail(),
       to: input.to,
       subject: input.subject,
       html: buildGenericNotificationEmailHtml(input),
     });
 
     if (error) {
-      throw new AppError(
+      return handleResendSendFailure(
+        error,
         "Failed to send notification email",
-        502,
-        "EMAIL_SEND_FAILED",
+        "Notification email was not sent",
       );
     }
 
