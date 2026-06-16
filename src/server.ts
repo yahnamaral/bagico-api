@@ -10,6 +10,7 @@ import { profitHunterRoutes } from "./modules/financial/profit-hunter.routes";
 import { revenueContractRoutes } from "./modules/financial/revenue-contract.routes";
 import { dashboardRoutes } from "./modules/dashboard/dashboard.routes";
 import { clientRoutes } from "./modules/clients/client.routes";
+import { clientFileRoutes } from "./modules/client-files/client-file.routes";
 import { organizationRoutes } from "./modules/organizations/organization.routes";
 import { boardRoutes } from "./modules/boards/board.routes";
 import { projectRoutes } from "./modules/projects/project.routes";
@@ -67,6 +68,7 @@ export async function buildServer() {
   await app.register(memberRoutes, { prefix: "/members" });
   await app.register(notificationRoutes, { prefix: "/notifications" });
   await app.register(clientRoutes, { prefix: "/clients" });
+  await app.register(clientFileRoutes, { prefix: "/clients" });
   await app.register(clientPortalMemberRoutes, { prefix: "/clients" });
   await app.register(clientPortalInviteRoutes, { prefix: "/clients" });
   await app.register(portalRoutes, { prefix: "/portal" });

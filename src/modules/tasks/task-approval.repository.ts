@@ -37,6 +37,32 @@ export class TaskApprovalRepository {
     });
   }
 
+  findActiveOrganizationMember(organizationId: string, clerkUserId: string) {
+    return this.db.organizationMember.findFirst({
+      where: {
+        organizationId,
+        clerkUserId,
+        deletedAt: null,
+        status: "ACTIVE",
+      },
+    });
+  }
+
+  findActiveClientMember(
+    organizationId: string,
+    clientId: string,
+    clerkUserId: string,
+  ) {
+    return this.db.clientMember.findFirst({
+      where: {
+        organizationId,
+        clientId,
+        clerkUserId,
+        deletedAt: null,
+      },
+    });
+  }
+
   createTypedComment(
     organizationId: string,
     taskId: string,

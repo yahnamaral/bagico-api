@@ -93,6 +93,18 @@ enum ProjectPriority {
   URGENT
 }
 
+enum ProjectType {
+  ONE_OFF
+  RECURRING
+}
+
+enum RecurrenceInterval {
+  MONTHLY
+  QUARTERLY
+  SEMIANNUAL
+  ANNUAL
+}
+
 enum TaskStatus {
   OPEN
   IN_PROGRESS
@@ -117,6 +129,11 @@ enum TaskApprovalStatus {
   CHANGES_REQUESTED
 }
 
+enum TaskApproverKind {
+  INTERNAL
+  CLIENT
+}
+
 enum TaskCommentType {
   COMMENT
   SYSTEM
@@ -137,6 +154,15 @@ enum ClientPortalRole {
   CLIENT_ADMIN
   CLIENT_MANAGER
   CLIENT_STAFF
+}
+
+enum ClientFileCategory {
+  CONTRACT
+  BRANDBOOK
+  LOGO
+  BRIEFING
+  REFERENCE
+  OTHER
 }
 
 enum ClientPortalInviteStatus {
@@ -206,6 +232,7 @@ model Organization {
   taskFiles    TaskFile[]
   taskActivities TaskActivity[]
   clientMembers       ClientMember[]
+  clientFiles         ClientFile[]
   clientPortalInvites ClientPortalInvite[]
   subscriptions       OrganizationSubscription[]
   aiGenerations       AiGeneration[]
@@ -337,6 +364,7 @@ model Client {
   organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   projects       Project[]
   tasks          Task[]
+  files          ClientFile[]
   portalMembers       ClientMember[]
   portalInvites       ClientPortalInvite[]
   timeEntries         TimeEntry[]
@@ -401,6 +429,33 @@ model ClientMember {
   @@map("client_members")
 }
 
+model ClientFile {
+  id                    String             @id @default(uuid()) @db.Uuid
+  organizationId        String             @db.Uuid
+  clientId              String             @db.Uuid
+  uploadedByClerkUserId String
+  fileName              String
+  fileUrl               String
+  fileKey               String?
+  mimeType              String
+  size                  Int
+  category              ClientFileCategory @default(OTHER)
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  deletedAt             DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  client       Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([clientId])
+  @@index([uploadedByClerkUserId])
+  @@index([category])
+  @@index([deletedAt])
+  @@index([organizationId, clientId])
+  @@map("client_files")
+}
+
 model Project {
   id             String          @id @default(uuid()) @db.Uuid
   organizationId String          @db.Uuid
@@ -409,9 +464,14 @@ model Project {
   description    String?
   status         ProjectStatus   @default(ACTIVE)
   priority       ProjectPriority @default(MEDIUM)
+  type           ProjectType     @default(ONE_OFF)
   startDate      DateTime?
   dueDate        DateTime?
   budget         Decimal?        @db.Decimal(12, 2)
+  monthlyFee         Decimal?            @db.Decimal(12, 2)
+  recurrenceInterval RecurrenceInterval?
+  renewalDay         Int?
+  fixedDeliverables  String?
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   deletedAt      DateTime?
@@ -427,9 +487,11 @@ model Project {
   @@index([clientId])
   @@index([status])
   @@index([priority])
+  @@index([type])
   @@index([deletedAt])
   @@index([organizationId, clientId])
   @@index([organizationId, status])
+  @@index([organizationId, type])
   @@index([organizationId, name])
   @@map("projects")
 }
@@ -502,6 +564,8 @@ model Task {
   approvalRequestedByClerkUserId String?
   approvedByClerkUserId         String?
   changeRequestedByClerkUserId  String?
+  responsibleApproverClerkUserId String?
+  responsibleApproverKind        TaskApproverKind?
   createdByClerkUserId          String
   assignedToClerkUserId         String?
   estimatedMinutes              Int?
@@ -525,6 +589,7 @@ model Task {
   @@index([projectId])
   @@index([clientId])
   @@index([assignedToClerkUserId])
+  @@index([responsibleApproverClerkUserId])
   @@index([status])
   @@index([priority])
   @@index([dueDate])
