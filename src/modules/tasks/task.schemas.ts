@@ -60,12 +60,27 @@ export const taskIdParamSchema = z.object({
   id: z.uuid(),
 });
 
-export const requestApprovalBodySchema = z.object({
-  message: z.string().trim().min(1).max(3000).optional(),
-});
+const taskApproverKindSchema = z.enum(["INTERNAL", "CLIENT"]);
+
+export const requestApprovalBodySchema = z
+  .object({
+    message: z.string().trim().min(1).max(3000).optional(),
+    approverClerkUserId: z.string().trim().min(1).optional(),
+    approverKind: taskApproverKindSchema.optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.approverClerkUserId && !data.approverKind) {
+      ctx.addIssue({
+        code: "custom",
+        message: "approverKind is required when approverClerkUserId is provided",
+        path: ["approverKind"],
+      });
+    }
+  });
 
 export const approveTaskBodySchema = z.object({
   comment: z.string().trim().min(1).max(3000).optional(),
+  bypassApprovalRequest: z.boolean().optional(),
 });
 
 export const requestChangesBodySchema = z.object({

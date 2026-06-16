@@ -1,4 +1,10 @@
-import type { Prisma, ProjectPriority, ProjectStatus } from "@prisma/client";
+import type {
+  Prisma,
+  ProjectPriority,
+  ProjectStatus,
+  ProjectType,
+  RecurrenceInterval,
+} from "@prisma/client";
 import { prisma } from "../../infrastructure/database/prisma";
 import type {
   CreateProjectBody,
@@ -8,7 +14,7 @@ import type {
 
 type ListFilters = Pick<
   ListProjectsQuery,
-  "search" | "status" | "priority" | "clientId"
+  "search" | "status" | "priority" | "type" | "clientId"
 >;
 
 const clientBasicSelect = {
@@ -43,6 +49,10 @@ export class ProjectRepository {
       where.priority = filters.priority;
     }
 
+    if (filters.type) {
+      where.type = filters.type;
+    }
+
     if (filters.clientId) {
       where.clientId = filters.clientId;
     }
@@ -61,7 +71,7 @@ export class ProjectRepository {
     organizationId: string,
     query: ListProjectsQuery,
   ): Promise<ProjectWithClient[]> {
-    const { page, limit, search, status, priority, clientId } = query;
+    const { page, limit, search, status, priority, type, clientId } = query;
     const skip = (page - 1) * limit;
 
     return this.db.project.findMany({
@@ -69,6 +79,7 @@ export class ProjectRepository {
         search,
         status,
         priority,
+        type,
         clientId,
       }),
       include: { client: clientBasicSelect },
@@ -102,6 +113,8 @@ export class ProjectRepository {
     organizationId: string,
     data: CreateProjectBody,
   ): Promise<ProjectWithClient> {
+    const isRecurring = data.type === "RECURRING";
+
     return this.db.project.create({
       data: {
         organizationId,
@@ -110,9 +123,16 @@ export class ProjectRepository {
         description: data.description,
         status: data.status as ProjectStatus | undefined,
         priority: data.priority as ProjectPriority | undefined,
+        type: data.type as ProjectType | undefined,
         startDate: data.startDate,
         dueDate: data.dueDate,
         budget: data.budget,
+        monthlyFee: isRecurring ? data.monthlyFee : undefined,
+        recurrenceInterval: isRecurring
+          ? (data.recurrenceInterval as RecurrenceInterval | undefined)
+          : undefined,
+        renewalDay: isRecurring ? data.renewalDay : undefined,
+        fixedDeliverables: isRecurring ? data.fixedDeliverables : undefined,
       },
       include: { client: clientBasicSelect },
     });
