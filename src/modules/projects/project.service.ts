@@ -38,6 +38,7 @@ export class ProjectService {
         search: query.search,
         status: query.status,
         priority: query.priority,
+        type: query.type,
         clientId: query.clientId,
       }),
     ]);
@@ -89,13 +90,69 @@ export class ProjectService {
       );
     }
 
-    const project = await this.repository.update(organizationId, id, body);
+    const existing = await this.repository.findById(organizationId, id);
+
+    if (!existing) {
+      throw new AppError("Project not found", 404, "PROJECT_NOT_FOUND");
+    }
+
+    const data = this.buildUpdateData(existing, body);
+
+    const project = await this.repository.update(organizationId, id, data);
 
     if (!project) {
       throw new AppError("Project not found", 404, "PROJECT_NOT_FOUND");
     }
 
     return project;
+  }
+
+  private buildUpdateData(
+    existing: ProjectWithClient,
+    body: UpdateProjectBody,
+  ): UpdateProjectBody {
+    const effectiveType = body.type ?? existing.type;
+
+    if (effectiveType === "ONE_OFF") {
+      // ONE_OFF projects keep budget/dueDate as-is and drop recurrence fields.
+      return {
+        ...body,
+        monthlyFee: null,
+        recurrenceInterval: null,
+        renewalDay: null,
+        fixedDeliverables: null,
+      };
+    }
+
+    const effectiveMonthlyFee =
+      body.monthlyFee !== undefined
+        ? body.monthlyFee
+        : existing.monthlyFee !== null
+          ? Number(existing.monthlyFee)
+          : null;
+
+    if (effectiveMonthlyFee === null || effectiveMonthlyFee <= 0) {
+      throw new AppError(
+        "monthlyFee is required for recurring projects",
+        422,
+        "PROJECT_MONTHLY_FEE_REQUIRED",
+      );
+    }
+
+    const effectiveRecurrenceInterval =
+      body.recurrenceInterval !== undefined
+        ? body.recurrenceInterval
+        : existing.recurrenceInterval;
+
+    if (!effectiveRecurrenceInterval) {
+      throw new AppError(
+        "recurrenceInterval is required for recurring projects",
+        422,
+        "PROJECT_RECURRENCE_INTERVAL_REQUIRED",
+      );
+    }
+
+    return body;
   }
 
   async remove(
